@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 from scipy import sparse
+from sklearn.decomposition import FastICA
 
 
 class Signal():
@@ -16,7 +17,8 @@ class Signal():
         self.eliminate_motion(time)
         self.denoise_filter(self.signal)
         self.normalization()
-        self.detrending_filter(self.signal)
+        self.ICA()
+        self.detrending_filter()
         self.moving_avg_filter()
         pass
 
@@ -85,13 +87,19 @@ class Signal():
         ones = np.ones(w_s) / w_s
         self.signal = np.convolve(self.signal, ones, 'valid')
 
-    def detrending_filter(self, signal, regularization=10):  # smoothing parameter λ = 10
-        N = len(signal)
+    def detrending_filter(self, regularization=10):  # smoothing parameter λ = 10
+        N = len(self.signal)
         identity = np.eye(N)
         B = np.dot(np.ones((N, 1)), np.array([[1, -2, 1]]))
         D_2 = sp.sparse.dia_matrix((B.T, [0, 1, 2]), shape=(N - 2, N))
         inv = np.linalg.inv(identity + regularization ** 2 * D_2.T @ D_2)
-        z_stat = ((identity - inv)) @ signal
-        trend = np.squeeze(np.asarray(signal - z_stat))
-        self.signal = np.array(signal) - trend
+        z_stat = (identity - inv) @ self.signal
+        self.signal = z_stat
+        # trend = np.squeeze(np.asarray(signal - z_stat))
+        # self.signal = np.array(signal) - trend
         # self.signal = sp.signal.detrend(signal, bp=10)
+
+    def ICA(self):
+        ica = FastICA()
+        s = ica.fit_transform(self.signal)
+        self.signal = s

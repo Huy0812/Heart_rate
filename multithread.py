@@ -32,18 +32,16 @@ class CaptureFrames():
 
     def __call__(self):
         # self.pipe = pipe
-        try: 
-            thread1 = threading.Thread(target= self.capture_frames )
-            thread2 = threading.Thread(target = self.mask_process ) 
-            thread3 = threading.Thread(target = self.vital_sign)
+        try:
+            thread1 = threading.Thread(target=self.capture_frames)
+            thread2 = threading.Thread(target=self.mask_process)
+            thread3 = threading.Thread(target=self.vital_sign)
             thread1.start()
             thread2.start()
             thread3.start()
-        except Exception as e :
+        except Exception as e:
             print(e)
-            
 
-    
     def capture_frames(self, source=0):
         camera = cv2.VideoCapture(source)
         (self.grabbed, frame) = camera.read()
@@ -51,7 +49,7 @@ class CaptureFrames():
 
         self.frames_count = 0
         while self.grabbed:
-            time.sleep(1/10000)
+            time.sleep(1 / 10000)
             (grabbed, frame) = camera.read()
 
             if not grabbed:
@@ -85,17 +83,17 @@ class CaptureFrames():
                 time_begin = time.time()
         self.terminate(camera)
 
-    def mask_process(self) :
-        while (True) :
-            time.sleep(1/10000)
-            if (len(self.frame_arr) > 200) :
+    def mask_process(self):
+        while (True):
+            time.sleep(1 / 10000)
+            if (len(self.frame_arr) > 200):
                 frame = self.frame_arr.pop()
                 self.mask(frame)
-            #time_end_mask = time.time()
-            #print(time_begin_mask-time_end_mask)
-            # forehead_roi_real = self.mask.getForehead_roi()
-            # nose_roi_real =  self.mask.getNose_roi()
-            # face_roi_real =  self.mask.getFace_roi()
+                # time_end_mask = time.time()
+                # print(time_begin_mask-time_end_mask)
+                # forehead_roi_real = self.mask.getForehead_roi()
+                # nose_roi_real =  self.mask.getNose_roi()
+                # face_roi_real =  self.mask.getFace_roi()
 
                 forehead_roi = np.asarray(self.mask.getForehead_roi(), dtype="uint8")
                 nose_roi = np.asarray(self.mask.getNose_roi(), dtype="uint8")
@@ -110,11 +108,11 @@ class CaptureFrames():
                 self.raw_bvp_arr_nose.append(nose_BVP)
                 self.raw_bvp_arr_face.append(face_BVP)
                 self.time.append(time.time())
-            else :
+            else:
                 pass
 
-                    # with open("data.txt", 'a') as file:
-                    # file.write(str(len(raw_bvp_arr)) + "\t" + str(face_BVP) + "\n")
+                # with open("data.txt", 'a') as file:
+                # file.write(str(len(raw_bvp_arr)) + "\t" + str(face_BVP) + "\n")
 
                 # out_forehead = np.zeros(frame.shape , np.uint8)
                 # out_forehead[forehead_roi_real] = frame[forehead_roi_real]
@@ -126,11 +124,10 @@ class CaptureFrames():
                 # cv2.imwrite(f'./images/nose{self.frames_count}.png', out_nose )
                 # cv2.imwrite(f'./images/face{self.frames_count}.png', out_face )
 
-            
-    def vital_sign(self) :
-        while(True) :
-            time.sleep(1/10000)
-            if len(self.raw_bvp_arr_forehead) % 301 == 300 :
+    def vital_sign(self):
+        while (True):
+            time.sleep(1 / 10000)
+            if len(self.raw_bvp_arr_forehead) % 301 == 300:
                 print("hello")
                 real_time = self.time[-1] - self.time[len(self.time) - 300]
                 signal_forehead = Signal()
@@ -139,44 +136,42 @@ class CaptureFrames():
                 signal_forehead.signal = self.raw_bvp_arr_forehead[-300:]
                 signal_nose.signal = self.raw_bvp_arr_nose[-300:]
                 signal_face.signal = self.raw_bvp_arr_face[-300:]
-                #fig, axs = plt.subplots(5)
-                #axs[0].plot(range(len(signal_forehead.signal)), signal_forehead.signal)
+                fig, axs = plt.subplots(5)
+                axs[0].plot(range(len(signal_forehead.signal)), signal_forehead.signal)
 
                 signal_forehead(real_time)
                 signal_nose(real_time)
                 signal_face(real_time)
-                #axs[1].plot(range(len(signal_forehead.signal)), signal_forehead.signal)
-
+                axs[1].plot(range(len(signal_forehead.signal)), signal_forehead.signal)
 
                 power_forehead, freqs_forehead = bandpass_filter(signal_forehead.signal, real_time)
                 power_nose, freqs_nose = bandpass_filter(signal_nose.signal, real_time)
                 power_face, freqs_face = bandpass_filter(signal_face.signal, real_time)
                 power_selection, bpm_selection, max_index = selection_signal(power_forehead, freqs_forehead,
-                                                                                power_nose, freqs_nose, power_face,
-                                                                                freqs_face)
+                                                                             power_nose, freqs_nose, power_face,
+                                                                             freqs_face)
 
-                print(60*bpm_selection[max_index])
+                print(60 * bpm_selection[max_index])
                 with open("data.txt", 'a') as file:
-                    file.write(str(60*bpm_selection[max_index]) + "\n")
-                #axs[2].plot(freqs_forehead, power_forehead)
-                #axs[3].plot(freqs_nose, power_nose)
-                #axs[4].plot(freqs_face, power_face)
+                    file.write(str(60 * bpm_selection[max_index]) + "\n")
+                axs[2].plot(freqs_forehead, power_forehead)
+                axs[3].plot(freqs_nose, power_nose)
+                axs[4].plot(freqs_face, power_face)
 
                 # print(HR)
                 # plt.figure()
                 # plt.show()
                 # plt.figure()
                 # axs[2].plot(list(range(len(signal.signal))), signal.signal)
-                #plt.show()
-           
+                plt.show()
+
             # if len(raw_bvp_arr) == 100 :
             # app = QtWidgets.QApplication(sys.argv)
             # w = MainWindow(x = list(range(len(raw_bvp_arr)))  , y = raw_bvp_arr )
             # w.show()
             # sys.exit(app.exec_())
-            else :
+            else:
                 pass
-
 
     def terminate(self, camera):
         # self.pipe.send(None)

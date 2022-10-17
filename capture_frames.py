@@ -115,9 +115,9 @@ class CaptureFrames():
                     signal_forehead = Signal()
                     signal_nose = Signal()
                     signal_face = Signal()
-                    signal_forehead.signal = raw_bvp_arr_forehead[-200:]
-                    signal_nose.signal = raw_bvp_arr_nose[-200:]
-                    signal_face.signal = raw_bvp_arr_face[-200:]
+                    signal_forehead.signal = raw_bvp_arr_forehead[-300:]
+                    signal_nose.signal = raw_bvp_arr_nose[-300:]
+                    signal_face.signal = raw_bvp_arr_face[-300:]
                     fig, axs = plt.subplots(5)
                     axs[0].plot(range(len(signal_forehead.signal)), signal_forehead.signal)
 
