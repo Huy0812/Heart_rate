@@ -97,7 +97,6 @@ class Signal():
         self.signal = z_stat
         # trend = np.squeeze(np.asarray(signal - z_stat))
         # self.signal = np.array(signal) - trend
-        # self.signal = sp.signal.detrend(signal, bp=10)
 
     def ICA(self):
         ica = FastICA()
